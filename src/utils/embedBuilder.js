@@ -21,7 +21,7 @@ export function createStatusEmbed(status) {
       },
       {
         name: 'Players Online',
-        value: online && maxPlayers > 0 ? `${playerCount}/${maxPlayers}` : 'N/A',
+        value: online ? `${playerCount}/${maxPlayers}` : 'N/A',
         inline: true,
       },
       {

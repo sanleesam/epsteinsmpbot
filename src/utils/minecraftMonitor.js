@@ -72,19 +72,11 @@ export class MinecraftServerMonitor {
       // Query the server ONCE
       const response = await this._queryServer();
       this.lastQueryResponse = response;
-      
-      // Validate that we got valid player data
-      const playerCount = response.players?.online || 0;
-      const maxPlayers = response.players?.max || 0;
-      
-      // If maxPlayers is 0 or invalid, treat as offline
-      if (!maxPlayers || maxPlayers <= 0) {
-        throw new Error('Invalid player data from server');
-      }
-      
       this.isOnline = true;
-      this.playerCount = playerCount;
-      this.maxPlayers = maxPlayers;
+
+      // Extract all data from the single response
+      this.playerCount = response.players?.online || 0;
+      this.maxPlayers = response.players?.max || 20; // Default to 20 if not reported
       this.motd = this._cleanMotd(response.motd || '');
       this.version = response.version?.name || 'Unknown';
 
