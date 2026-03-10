@@ -3,11 +3,23 @@ import { markServerLaunched } from '../../utils/serverState.js';
 import { getStatusMessageId } from '../../utils/messageStorage.js';
 import { createStatusEmbed } from '../../utils/embedBuilder.js';
 
+// Only allow this user to execute the command
+const AUTHORIZED_USER_ID = '820638721857814538';
+
 export const data = new SlashCommandBuilder()
   .setName('launchserver')
   .setDescription('Mark the server as launched and reveal the IP address on the status embed');
 
 export async function execute(interaction) {
+  // Check if user is authorized
+  if (interaction.user.id !== AUTHORIZED_USER_ID) {
+    await interaction.reply({
+      content: '❌ You do not have permission to use this command.',
+      ephemeral: true,
+    });
+    return;
+  }
+
   try {
     // Mark server as launched
     markServerLaunched();
