@@ -80,16 +80,19 @@ async function checkServerStatus(client) {
         // Update existing message
         await statusMessage.edit({ embeds: [statusEmbed] });
       } catch (error) {
-        // Message was deleted, don't create a new one
-        console.log('⚠️ Status message was deleted. No embed will be updated until you create one.');
-        clearStatusMessageId();
+        // Message doesn't exist anymore, create new one
+        console.log('Old status message not found, creating new one...');
+        statusMessage = await statusChannel.send({ embeds: [statusEmbed] });
+        saveStatusMessageId(statusMessage.id);
       }
     } else {
-      // No stored message, don't create one - user must set it up manually
-      console.log('⚠️ No status message ID stored. Set one up with /setupstatus command.');
+      // No stored message, create a new one
+      statusMessage = await statusChannel.send({ embeds: [statusEmbed] });
+      saveStatusMessageId(statusMessage.id);
+      console.log(`📌 Status embed created: ${statusMessage.url}`);
     }
 
-    // Handle server state changes
+    // Handle server state changes (only if status actually changed AND confirmed by checking again)
     if (!previousStatus) {
       previousStatus = currentStatus;
       console.log(`[Server Status] Online: ${currentStatus.online}, Players: ${currentStatus.playerCount}/${currentStatus.maxPlayers}`);
@@ -98,16 +101,29 @@ async function checkServerStatus(client) {
 
     // Check if server went offline
     if (previousStatus.online && !currentStatus.online) {
-      console.log('⚠️ Server went OFFLINE!');
-      if (announcementChannelId) {
-        const announcementChannel = client.channels.cache.get(announcementChannelId);
-        if (announcementChannel) {
-          const announcement = createOfflineAnnouncement();
-          await announcementChannel.send({
-            content: '@everyone',
-            embeds: [announcement],
-          });
+      // Verify offline status with a retry
+      console.log('⚠️ Query failed, retrying before announcing offline...');
+      await new Promise(r => setTimeout(r, 2000)); // Wait 2 seconds
+      const retryStatus = await serverMonitor.getServerStatus();
+      
+      if (!retryStatus.online) {
+        console.log('⚠️ Server confirmed OFFLINE!');
+        if (announcementChannelId) {
+          const announcementChannel = client.channels.cache.get(announcementChannelId);
+          if (announcementChannel) {
+            const announcement = createOfflineAnnouncement();
+            await announcementChannel.send({
+              content: '@everyone',
+              embeds: [announcement],
+            });
+          }
         }
+        previousStatus = retryStatus;
+      } else {
+        // False positive, server is actually online
+        console.log('✅ Server is online (false alarm)');
+        previousStatus = retryStatus;
+        return;
       }
     }
 
