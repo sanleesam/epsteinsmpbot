@@ -116,9 +116,9 @@ export class MinecraftServerMonitor {
    * @private
    */
   async _queryServer() {
-    // Set a longer timeout for stability (30 seconds)
+    // Set a reasonable timeout (15 seconds)
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Server query timeout (30s)')), 30000)
+      setTimeout(() => reject(new Error('Server query timeout')), 15000)
     );
 
     const queryPromise = status(this.serverIp, { port: this.serverPort });

@@ -7,6 +7,8 @@ import { getStatusMessageId, saveStatusMessageId, clearStatusMessageId } from '.
 let serverMonitor = null;
 let previousStatus = null;
 let monitoringInterval = null;
+let lastOfflineAnnouncementTime = 0; // Prevent spam
+const ANNOUNCEMENT_COOLDOWN = 300000; // 5 minutes between announcements
 
 export const name = 'ready';
 
@@ -70,44 +72,34 @@ async function checkServerStatus(client) {
     // Create the status embed
     const statusEmbed = createStatusEmbed(currentStatus);
 
-    // Try to get and update existing message
-    const storedMessageId = getStatusMessageId();
-    let statusMessage = null;
 
     if (storedMessageId) {
       try {
-        statusMessage = await statusChannel.messages.fetch(storedMessageId);
-        // Update existing message
+        const statusMessage = await statusChannel.messages.fetch(storedMessageId);
+        // Update existing message (EDIT, don't send new)
         await statusMessage.edit({ embeds: [statusEmbed] });
       } catch (error) {
-        // Message doesn't exist anymore, create new one
-        console.log('Old status message not found, creating new one...');
-        statusMessage = await statusChannel.send({ embeds: [statusEmbed] });
-        saveStatusMessageId(statusMessage.id);
+        // Message was deleted, clear the ID but don't create new one
+        console.log('⚠️ Status message was deleted.');
+        clearStatusMessageId();
       }
     } else {
-      // No stored message, create a new one
-      statusMessage = await statusChannel.send({ embeds: [statusEmbed] });
-      saveStatusMessageId(statusMessage.id);
-      console.log(`📌 Status embed created: ${statusMessage.url}`);
+      // No stored message ID - just log, don't create
+      console.log('⚠️ No status message ID stored. Set one up with /setupstatus command.');
     }
 
-    // Handle server state changes (only if status actually changed AND confirmed by checking again)
+    // Handle server state changes
     if (!previousStatus) {
       previousStatus = currentStatus;
       console.log(`[Server Status] Online: ${currentStatus.online}, Players: ${currentStatus.playerCount}/${currentStatus.maxPlayers}`);
       return;
     }
 
-    // Check if server went offline
+    // Check if server went offline (with cooldown to prevent spam)
     if (previousStatus.online && !currentStatus.online) {
-      // Verify offline status with a retry
-      console.log('⚠️ Query failed, retrying before announcing offline...');
-      await new Promise(r => setTimeout(r, 2000)); // Wait 2 seconds
-      const retryStatus = await serverMonitor.getServerStatus();
-      
-      if (!retryStatus.online) {
-        console.log('⚠️ Server confirmed OFFLINE!');
+      const now = Date.now();
+      if (now - lastOfflineAnnouncementTime > ANNOUNCEMENT_COOLDOWN) {
+        console.log('⚠️ Server went OFFLINE!');
         if (announcementChannelId) {
           const announcementChannel = client.channels.cache.get(announcementChannelId);
           if (announcementChannel) {
@@ -116,12 +108,9 @@ async function checkServerStatus(client) {
               content: '@everyone',
               embeds: [announcement],
             });
+            lastOfflineAnnouncementTime = now;
           }
-        }
-        previousStatus = retryStatus;
-      } else {
-        // False positive, server is actually online
-        console.log('✅ Server is online (false alarm)');
+        }.log('✅ Server is online (false alarm)');
         previousStatus = retryStatus;
         return;
       }
