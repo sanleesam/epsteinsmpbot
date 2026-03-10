@@ -28,13 +28,13 @@ export function createStatusEmbed(status) {
         inline: true,
       },
       {
-        name: 'Server Address',
-        value: `\`${ip}\``,
+        name: 'Launch Time',
+        value: '🎬 Launching on March 11, 2026 at 11:30 AM',
         inline: false,
       }
     );
 
-  if (motd) {
+  if (motd && online) {
     embed.addFields({
       name: 'MOTD',
       value: motd,
