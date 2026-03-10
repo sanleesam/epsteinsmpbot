@@ -28,8 +28,8 @@ export function createStatusEmbed(status) {
         inline: true,
       },
       {
-        name: 'Launch Time',
-        value: '🎬 Launching on March 11, 2026 at 11:30 AM',
+        name: 'Server IP',
+        value: 'instead-congratulations.gl.joinmc.link',
         inline: false,
       }
     );
