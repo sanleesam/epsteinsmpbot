@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -6,7 +6,8 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DATA_FILE = join(__dirname, '../data/messageIds.json');
+const DATA_DIR = join(__dirname, '../data');
+const DATA_FILE = join(DATA_DIR, 'messageIds.json');
 
 /**
  * Load message IDs from storage
@@ -25,6 +26,8 @@ function loadMessageIds() {
  */
 function saveMessageIds(data) {
   try {
+    // Ensure data directory exists before writing
+    mkdirSync(DATA_DIR, { recursive: true });
     writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
   } catch (error) {
     console.error('Error saving message IDs:', error);
