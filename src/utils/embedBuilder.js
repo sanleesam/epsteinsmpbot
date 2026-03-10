@@ -1,4 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
+import { isServerLaunched } from './serverState.js';
 
 /**
  * Create a server status embed message
@@ -7,6 +8,7 @@ import { EmbedBuilder } from 'discord.js';
  */
 export function createStatusEmbed(status) {
   const { ip, online, playerCount, maxPlayers, motd, version } = status;
+  const launched = isServerLaunched();
 
   const embed = new EmbedBuilder()
     .setTitle('🎮 Minecraft Server Status')
@@ -28,8 +30,8 @@ export function createStatusEmbed(status) {
         inline: true,
       },
       {
-        name: 'Server IP',
-        value: 'instead-congratulations.gl.joinmc.link',
+        name: launched ? 'Server IP' : 'Launch Time',
+        value: launched ? 'instead-congratulations.gl.joinmc.link' : '🎬 Launching on March 11, 2026 at 11:30 AM',
         inline: false,
       }
     );
