@@ -72,6 +72,8 @@ async function checkServerStatus(client) {
     // Create the status embed
     const statusEmbed = createStatusEmbed(currentStatus);
 
+    // Try to get and update existing message
+    const storedMessageId = getStatusMessageId();
 
     if (storedMessageId) {
       try {
@@ -110,9 +112,7 @@ async function checkServerStatus(client) {
             });
             lastOfflineAnnouncementTime = now;
           }
-        }.log('✅ Server is online (false alarm)');
-        previousStatus = retryStatus;
-        return;
+        }
       }
     }
 
