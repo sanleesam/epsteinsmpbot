@@ -1,0 +1,25 @@
+{
+  "name": "epstein-smp-discord-bot",
+  "version": "1.0.0",
+  "description": "A Discord bot to monitor Minecraft server status for Epstein SMP",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "discord.js",
+    "minecraft",
+    "bot"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.25.1",
+    "dotenv": "^16.6.1",
+    "minecraft-server-util": "^3.5.5"
+  }
+}
